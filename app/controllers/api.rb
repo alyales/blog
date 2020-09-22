@@ -44,4 +44,5 @@ Blog::App.controllers :api do
     status code
     body errors.to_json
   end
+
 end

@@ -1,17 +1,17 @@
 require 'json'
 
-def create_posts(ip_addresses, user_logins, i, marks)
+def create_posts(user_logins, ip_addresses, i, marks)
   http_path = 'http://localhost:3000/api/create_post'
-  resp = `curl -X POST -d "title=title#{i}&body=body#{i}&user_login=#{user_logins.sample}&ip_address=#{ip_addresses.sample}" #{http_path}`
+  resp = `curl -s -X POST -d "title=title#{i}&body=body#{i}&user_login=#{user_logins.sample}&ip_address=#{ip_addresses.sample}" #{http_path}`
 
   id = JSON.parse(resp).dig('post', 'id')
 
-  if id % 13 == 0
-    `curl -d "post_id=#{id}&mark=#{marks.sample}" -X POST http://localhost:3000/api/mark_post`
+  if id && id % 13 == 0
+    `curl -d "post_id=#{id}&mark=#{marks.sample}" -X POST -s http://localhost:3000/api/mark_post`
   end
 
-  if id % 37 == 0
-    `curl -d "post_id=#{id}&mark=#{marks.sample}" -X POST http://localhost:3000/api/mark_post`
+  if id && id % 37 == 0
+    `curl -d "post_id=#{id}&mark=#{marks.sample}" -X POST -s http://localhost:3000/api/mark_post`
   end
 end
 
@@ -22,26 +22,14 @@ def in_parallel
 
   threads = []
   threads << Thread.new do
-    1.upto(50000) do |i|
+    1.upto(100000) do |i|
       create_posts(user_logins, ip_addresses, i, marks)
     end
   end
 
   threads << Thread.new do
-    50001.upto(100000) do |i|
+    100001.upto(200000) do |i|
       create_posts(user_logins, ip_addresses, i, marks)
-    end
-  end
-
-  threads << Thread.new do
-    100001.upto(150000) do |i|
-      create_posts(ips, users, i, marks)
-    end
-  end
-
-  threads << Thread.new do
-    150001.upto(200000) do |i|
-      create_posts(ips, users, i, marks)
     end
   end
   threads.map(&:join)

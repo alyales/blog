@@ -9,11 +9,8 @@ class PostsManager
       new_post = get_post_instance(title, body, errors)
 
       if errors.blank?
-        user.save! if user.new_record?
-        ip.save!   if ip.new_record?
-
-        new_post.user = user
-        new_post.ip = ip
+        new_post.user_id = user.id
+        new_post.ip_id = ip.id
         new_post.save!
         new_post
       end
@@ -25,7 +22,7 @@ class PostsManager
       errors = {}
 
       mark = get_mark_instance(post_id, mark, errors)
-      mark.save! if errors.blank?
+      mark.save if errors.blank?
 
       {errors: errors, mark: mark}
     end
@@ -36,8 +33,7 @@ class PostsManager
       user = User.find_by_login(login)
 
       if user.nil?
-        user = User.new(login: login)
-        model_error(user, :user, errors)
+        user = model_error(User.new(login: login), :user, errors)
       end
 
       user
@@ -47,8 +43,7 @@ class PostsManager
       ip = Ip.find_by_address(address)
 
       if ip.nil?
-        ip = Ip.new(address: address)
-        model_error(ip, :ip, errors)
+        ip = model_error(Ip.new(address: address), :ip, errors)
       end
 
       ip
@@ -56,7 +51,7 @@ class PostsManager
 
     def get_post_instance(title, body, errors)
       post = Post.new(title: title, body: body)
-      model_error(post, :post, errors)
+      model_error(post, :post, errors, true)
 
       post
     end
@@ -71,8 +66,13 @@ class PostsManager
       mark
     end
 
-    def model_error(instance, key, errors)
-      errors[key] = instance.errors.messages unless instance.valid?
+    def model_error(instance, key, errors, without_save=false)
+      if without_save
+        errors[key] = instance.errors.messages unless instance.valid?
+      else
+        errors[key] = instance.errors.messages unless instance.save
+        instance
+      end
     end
 
   end
