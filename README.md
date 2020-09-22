@@ -4,6 +4,10 @@ git clone https://github.com/alyales/blog.git
 
 to create_db: rake ar:create && ar:migrate
 
+padrino c
+
+padrino s
+
 examples of requests:
 
 create post
